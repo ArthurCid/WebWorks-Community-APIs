@@ -1,5 +1,0 @@
-{
-    "global": false,
-    "namespace": "community.qrreader",
-    "dependencies": ["utils"]
-}
