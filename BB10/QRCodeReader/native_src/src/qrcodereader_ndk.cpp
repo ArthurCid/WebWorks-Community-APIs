@@ -97,10 +97,10 @@ namespace webworks {
         Json::Value root;
         root["header"] = base64_encode((const unsigned char *)bitmapHeader.c_str(), bitmapHeader.length());
         root["frame"]  = base64_encode((const unsigned char *)rgbFrame.c_str(), rgbFrame.length());;
-        //std::string event = "community.QRCodeReader.codeFoundCallback.native";
+        std::string event = "community.QRCodeReader.cameraFrameCallback.native";
 
         // push encoded frame back to caller
-        //QRCodeReaderNDK::m_pParent->NotifyEvent(event + " " + writer.write(root));
+        QRCodeReaderNDK::m_pParent->NotifyEvent(event + " " + writer.write(root));
 
         try{
             Ref<LuminanceSource> source(new GreyscaleLuminanceSource((unsigned char *)buff, stride, height, 0,0,width,height));

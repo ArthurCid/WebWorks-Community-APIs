@@ -12,5 +12,9 @@ module.exports = {
 	stopRead: function (success, fail) {
 		qrcodereader.getInstance().QRCodeReaderStop();
 		success();
-	}
+	},
+    displayFrame: function (success, fail) {
+        qrcodereader.getInstance().displayFrame();
+        success();
+    }
 };

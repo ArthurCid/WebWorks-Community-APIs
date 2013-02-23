@@ -65,6 +65,10 @@ JNEXT.QRCodeReader = function () {
              jsonData = arData.slice(1, arData.length).join(" ");
             _event.trigger("community.QRCodeReader.disabledCallback", JSON.parse(jsonData));
         }
+        else if ( strEventDesc === "community.QRCodeReader.cameraFrameCallback.native") {
+            jsonData = arData.slice(1, arData.length).join(" ");
+            _event.trigger("community.QRCodeReader.cameraFrameCallback", JSON.parse(jsonData));
+        }
     };
 
     // Thread methods
@@ -73,6 +77,9 @@ JNEXT.QRCodeReader = function () {
     };
     self.QRCodeReaderStop = function () {
         return JNEXT.invoke(self.m_id, "QRCodeReaderStop");
+    };
+    self.displayFrame = function () {
+        return JNEXT.invoke(self.m_id, "displayFrame");
     };
 
     // ************************

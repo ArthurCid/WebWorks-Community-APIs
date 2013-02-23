@@ -31,4 +31,11 @@ var _self = {},
 		return window.webworks.execAsync(_ID, "stopRead", null);
 	};
 
+    _self.displayFrame = function (callback) {
+        if ( typeof(callback) == "function" ) {
+            window.webworks.event.once(_ID, "community.QRCodeReader.cameraFrameCallback", callback);
+        }
+        return window.webworks.execAsync(_ID, "displayFrame", null);
+    };
+
 module.exports = _self;
