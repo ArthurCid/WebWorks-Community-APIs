@@ -23,8 +23,7 @@ class QRCodeReaderJS;
 
 namespace webworks {
 
-std::string YUV_NV12_TO_RGB(const unsigned char* yuv, int width, int height);
-std::string getBitmapHeader(const unsigned int width, const unsigned int height);
+std::string getBMPHeader(const unsigned int width, const unsigned int height);
 
 class QRCodeReaderNDK {
 public:

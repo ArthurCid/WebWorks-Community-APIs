@@ -33,4 +33,11 @@
 std::string base64_encode(unsigned char const* , unsigned int len);
 std::string base64_decode(std::string const& s);
 
+/*
+ * Function for encoding an RGB888 frame in base64 format.
+ * This function was created by Michael Delong for the QRCodeReader BB10 native extension and
+ * is a modification of the base64_encode function implemented above.
+ */
+std::string base64_encodeRGB888(unsigned char const* bytes_to_encode, unsigned int in_len);
+
 #endif /* BASE64_H_ */

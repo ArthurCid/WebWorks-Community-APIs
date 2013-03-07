@@ -22,7 +22,7 @@
 #include <zxing/qrcode/QRCodeReader.h>
 #include <zxing/MultiFormatReader.h>
 
-#include "base64.h"
+#include <base64/base64.h>
 
 #include "qrcodereader_ndk.hpp"
 #include "qrcodereader_js.hpp"
@@ -84,20 +84,19 @@ namespace webworks {
      * The frame is analyzed to determine if a QR code can be matched.
      */
     void viewfinder_callback(camera_handle_t handle,camera_buffer_t* buf,void* arg) {
-        camera_frame_nv12_t* data = (camera_frame_nv12_t*)(&(buf->framedesc));
+        camera_frame_rgb888_t* data = (camera_frame_rgb888_t*)(&(buf->framedesc));
         uint8_t* buff = buf->framebuf;
         int stride = data->stride;
         int width = data->width;
         int height = data->height;
 
-        std::string rgbFrame = YUV_NV12_TO_RGB((unsigned char *)buff, width, height);
-        std::string bitmapHeader = getBitmapHeader(width, height);
+        std::string bitmapHeader = getBMPHeader(width, height);
 
         Json::FastWriter writer;
         Json::Value root;
         root["header"] = base64_encode((const unsigned char *)bitmapHeader.c_str(), bitmapHeader.length());
-        root["frame"]  = base64_encode((const unsigned char *)rgbFrame.c_str(), rgbFrame.length());;
-        std::string event = "community.QRCodeReader.cameraFrameCallback.native";
+        root["frame"]  = base64_encodeRGB888((const unsigned char *)buff, width * height);
+        std::string event = "community.QRCodeReader.codeFoundCallback.native";
 
         // push encoded frame back to caller
         QRCodeReaderNDK::m_pParent->NotifyEvent(event + " " + writer.write(root));
@@ -190,7 +189,19 @@ namespace webworks {
             return EIO;
         }
 
-        err = camera_start_photo_viewfinder( mCameraHandle, &viewfinder_callback, NULL, NULL);
+        err = camera_set_videovf_property(mCameraHandle, CAMERA_IMGPROP_FORMAT, CAMERA_FRAMETYPE_RGB8888);
+        if ( err != CAMERA_EOK){
+#ifdef DEBUG
+            fprintf(stderr, " Ran into an issue when configuring the camera = %d\n ", err);
+#endif
+            root["successful"] = false;
+            root["error"] = err;
+            root["reason"] = getCameraErrorDesc( err );
+            m_pParent->NotifyEvent(event + " " + writer.write(root));
+            return EIO;
+        }
+
+        err = camera_start_video_viewfinder( mCameraHandle, &viewfinder_callback, NULL, NULL);
 
         if ( err != CAMERA_EOK) {
 #ifdef DEBUG
@@ -219,7 +230,7 @@ namespace webworks {
         std::string event = "community.QRCodeReader.disabledCallback.native";
         root["disabled"] = "true";
 
-        err = camera_stop_photo_viewfinder(mCameraHandle);
+        err = camera_stop_video_viewfinder(mCameraHandle);
         if ( err != CAMERA_EOK)
         {
 #ifdef DEBUG
@@ -253,41 +264,7 @@ namespace webworks {
         return EOK;
     }
 
-    std::string YUV_NV12_TO_RGB(const unsigned char* yuv, int width, int height) {
-
-    	std::string rgbString = "";
-    	const int frameSize = width * height;
-
-    	const int di = +1;
-    	const int dj = +1;
-
-    	int a = 0;
-    	for (int i = 0, ci = 0; i < height; ++i, ci += di) {
-    		for (int j = 0, cj = 0; j < width; ++j, cj += dj) {
-    			int y = (0xff & ((int) yuv[ci * width + cj]));
-    			int u = (0xff & ((int) yuv[frameSize + (ci >> 1) * width + (cj & ~1) + 0]));
-    			int v = (0xff & ((int) yuv[frameSize + (ci >> 1) * width + (cj & ~1) + 1]));
-    			y = y < 16 ? 16 : y;
-
-    			int r = (int) (1.164f * (y - 16) + 1.596f * (v - 128));
-    			int g = (int) (1.164f * (y - 16) - 0.813f * (v - 128) - 0.391f * (u - 128));
-    			int b = (int) (1.164f * (y - 16) + 2.018f * (u - 128));
-
-    			r = r < 0 ? 0 : (r > 255 ? 255 : r);
-    			g = g < 0 ? 0 : (g > 255 ? 255 : g);
-    			b = b < 0 ? 0 : (b > 255 ? 255 : b);
-
-    			rgbString += (char)r;
-    			rgbString += (char)g;
-    			rgbString += (char)b;
-    			//argb[a++] = 0xff000000 | (r << 16) | (g << 8) | b;
-    		}
-    	}
-
-    	return rgbString;
-    }
-
-    std::string getBitmapHeader(const unsigned int width, const unsigned int height) {
+    std::string getBMPHeader(const unsigned int width, const unsigned int height) {
 
     	std::stringstream ss (std::stringstream::in);
     	ss << hex << (width * height);
