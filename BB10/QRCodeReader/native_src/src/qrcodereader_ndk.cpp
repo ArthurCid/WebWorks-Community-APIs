@@ -189,7 +189,9 @@ namespace webworks {
             return EIO;
         }
 
-        err = camera_set_videovf_property(mCameraHandle, CAMERA_IMGPROP_FORMAT, CAMERA_FRAMETYPE_RGB8888);
+        err = camera_set_videovf_property(mCameraHandle,
+           CAMERA_IMGPROP_FORMAT, CAMERA_FRAMETYPE_RGB8888, // <--- what we want
+           CAMERA_IMGPROP_CREATEWINDOW, 0);
         if ( err != CAMERA_EOK){
 #ifdef DEBUG
             fprintf(stderr, " Ran into an issue when configuring the camera = %d\n ", err);
